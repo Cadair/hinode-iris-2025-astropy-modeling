@@ -10,28 +10,38 @@
 #+REVEAL_EXTRA_CSS: org.css
 #+REVEAL_POSTAMBLE: <script>Reveal.configure({ hash:true });</script>
 
-#+TITLE: SunPy: Python for Solar Physics
+#+TITLE: Fast Parallel Line Fitting with Astropy
 #+AUTHOR: Stuart Mumford
 #+REVEAL_TITLE_SLIDE: <h3>%t</h3>
 #+REVEAL_TITLE_SLIDE: <h4>%a</h4>
 #+REVEAL_TITLE_SLIDE: <div class="three-columns" style="align-items: center;"><a href="https://aperio.software"><img src='images/aperio.svg'/></a><div></div><a href="https://sunpy.org"><img src='images/sunpy.svg'/></a></div>
 
 * Me
+:PROPERTIES:
+:CUSTOM_ID: me
+:END:
 
-#+REVEAL_HTML: <div class='left'>
+#+REVEAL_HTML: <div class='left-large'>
 
+I have a PhD in numerical solar physics from Sheffield.
+
+I've been Lead Developer of SunPy since ~2014
+
+Now run Apeiro Software - A company doing Open Source software development for Astro and Solar Physics
+
+#+REVEAL_HTML: <hr>
 Find me online:
 
 - [[https://cadair.com][cadair.com]]
 - [[https://matrix.to/#/@cadair:cadair.com][@cadair:cadair.com]] on Matrix
-- [[https://mastodon.matrix.org/@Cadair][@Cadair@mastodon.matrix.org]] on Mastodon
+- [[https://mastodon.matrix.org/@Cadair][@cadair@nheko.io]] on Mastodon
 - [[https://github.com/Cadair][@Cadair]] on GitHub
 
 #+REVEAL_HTML: </div>
 
-#+REVEAL_HTML: <div class='right'>
+#+REVEAL_HTML: <div class='right-small'>
 
-#+attr_html: :width 500px
+#+attr_html: :width 100%
 [[./images/cadair.jpg]]
 
 #+REVEAL_HTML: </div>
