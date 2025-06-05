@@ -19,11 +19,14 @@ jobs:
         with:
           python-version-file: "pyproject.toml"
 
+      - name: Sync uv env
+        run: uv sync --locked --all-extras
+
       - name: Install emacs
         run: sudo snap install emacs --classic
 
       - name: Build talk
-        run: bash ./export.sh
+        run: uv run ./export.sh
 
       - name: Upload static files as artifact
         id: deployment
