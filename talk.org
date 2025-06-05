@@ -12,10 +12,18 @@
 #+PROPERTY: header-args :noweb strip-export :exports both
 
 #+NAME: mpl
-#+begin_src python :export none :exports none
+#+begin_src python :exports none :results none
 import matplotlib.pyplot as plt
 plt.style.use("bmh")
 plt.rcParams["savefig.transparent"] = True
+#+end_src
+
+#+begin_src sh :exports none :results none
+UV_PROJECT_ENVIRONMENT=".venv-before" uv sync --locked --group before
+#+end_src
+
+#+begin_src sh :exports none :results none
+UV_PROJECT_ENVIRONMENT=".venv" uv sync --locked --group latest
 #+end_src
 
 #+TITLE: Fast Parallel Line Fitting with Astropy
@@ -93,7 +101,11 @@ import numpy as np
 fig = plt.figure(figsize=(10, 3))
 #+end_src
 
-#+begin_src python :results graphics file output :file ./images/generated/initial_model.svg :session initial-model
+#+RESULTS:
+
+#+NAME: double_gaussian_setup
+#+begin_src python :exports none :results none
+import numpy as np
 import astropy.units as u
 import astropy.modeling.models as m
 
@@ -106,6 +118,10 @@ initial_model = (
     m.Gaussian1D(amplitude=1*u.count, mean=NIV_wave, stddev=0.05 * u.nm) +
     m.Gaussian1D(amplitude=1*u.count, mean=NeVIII_wave, stddev=0.05 * u.nm)
 )
+#+end_src
+
+#+begin_src python :results graphics file output :file ./images/generated/initial_model.svg :session initial-model :noweb yes
+<<double_gaussian_setup>>
 
 plt.plot(wave, initial_model(wave))
 #+end_src
@@ -113,7 +129,7 @@ plt.plot(wave, initial_model(wave))
 #+RESULTS:
 [[file:./images/generated/initial_model.svg]]
 
-* How it started
+* Approachable, but slow
 :PROPERTIES:
 :CUSTOM_ID: how_it_started
 :END:
@@ -131,5 +147,60 @@ plt.plot(wave, initial_model(wave))
 #+BEGIN_NOTES
 - The issue of being able to apply a non-linear fitter to a set of models has existed for a long time.
 - For linear fitters the minima of all models is the minima of every model, not true for non-linear fitters.
-- Therefore each non-linear fit needs to be evaluated independently
+- Therefore each non-linear fit needs to be evaluated independently.
 #+END_NOTES
+
+* Benchmarking
+  :PROPERTIES:
+  :CUSTOM_ID: benchmarking
+  :END:
+#+NAME: fitting_setup
+#+begin_src python :results none :eval never :exports none
+from astropy.modeling import fitting
+
+# Make some data with some noise
+y = initial_model(wave)
+y *= np.random.normal(0, 0.2, wave.shape)
+
+# Fit the model to the data
+fit_g = fitting.TRFLSQFitter()
+#+end_src
+
+#+NAME: fit_initial_model
+#+begin_src python :eval never :exports none
+fit_g(initial_model, wave, y)
+#+end_src
+#+NAME: run_timeit
+#+begin_src python :results none :eval never :exports none
+import timeit
+import astropy
+
+number_of_fits = 100
+
+setup_script = """\
+<<double_gaussian_setup>>
+<<fitting_setup>>
+"""
+
+time_taken = timeit.timeit("<<fit_initial_model>>", setup=setup_script, number=number_of_fits)
+print(f"Running {number_of_fits} fits with astropy {astropy.__version__} took {time_taken:1.5f}s")
+#+end_src
+
+#+begin_src python :eval never :exports both :noweb yes
+<<fitting_setup>>
+<<fit_initial_model>>
+#+end_src
+
+#+begin_src python :python .venv-before/bin/python :noweb yes :exports results :results output
+<<run_timeit>>
+#+end_src
+
+#+RESULTS:
+: Running 100 fits with astropy 6.1.0 took 2.37629s
+
+#+begin_src python :noweb yes :exports results :results output
+<<run_timeit>>
+#+end_src
+
+#+RESULTS:
+: Running 100 fits with astropy 7.1.0 took 1.38826s

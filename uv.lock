@@ -1,6 +1,10 @@
 version = 1
 revision = 2
 requires-python = ">=3.12"
+conflicts = [[
+    { package = "hinode-iris-2025-astropy-modeling", group = "before" },
+    { package = "hinode-iris-2025-astropy-modeling", group = "latest" },
+]]
 
 [[package]]
 name = "aioftp"
@@ -81,6 +85,34 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/ba/b5/6d55e80f6d8a08ce22b982eafa278d823b541c925f11ee774b0b9c43473d/aiosignal-1.3.2.tar.gz", hash = "sha256:a8c255c66fafb1e499c9351d0bf32ff2d8a0321595ebac3b93713656d2436f54", size = 19424, upload-time = "2024-12-13T17:10:40.86Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/ec/6a/bc7e17a3e87a2985d3e8f4da4cd0f481060eb78fb08596c42be62c90a4d9/aiosignal-1.3.2-py2.py3-none-any.whl", hash = "sha256:45cde58e409a301715980c2b01d0c28bdde3770d8290b5eb2173759d9acb31a5", size = 7597, upload-time = "2024-12-13T17:10:38.469Z" },
+]
+
+[[package]]
+name = "astropy"
+version = "6.1.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "astropy-iers-data" },
+    { name = "numpy" },
+    { name = "packaging" },
+    { name = "pyerfa" },
+    { name = "pyyaml" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/7c/89/74e46c8e28ae138ed9b62eed430c1709d3440e813ebea31fa0f879021dd7/astropy-6.1.0.tar.gz", hash = "sha256:6c3b915f10b1576190730ddce45f6245f9927dda3de6e3f692db45779708950f", size = 7034312, upload-time = "2024-05-04T22:17:08.837Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/b3/6c/0a7cf00367ca0310aeb7e9a4124f35c9dbf446a33a925452d384da31feb1/astropy-6.1.0-cp312-cp312-macosx_10_9_x86_64.whl", hash = "sha256:d67a98063ae97ae40757e2f58fb61b256ad36bd51b648334c072c6057774ecd6", size = 6519587, upload-time = "2024-05-04T22:16:44.112Z" },
+    { url = "https://files.pythonhosted.org/packages/03/1e/b597f9e854c09b1a1f558cf17a671ad886d9ee02df760027d4b4a788653a/astropy-6.1.0-cp312-cp312-macosx_11_0_arm64.whl", hash = "sha256:f6bf9990282c5732c8fca053c5c54116cbf79b6a7a50549f0f1f8e156d614496", size = 6397088, upload-time = "2024-05-04T22:16:47.988Z" },
+    { url = "https://files.pythonhosted.org/packages/46/03/bb90b1f4997b3e4aa1459e3d87f188d9e3fdbf12a6d56be658f8f0348a5a/astropy-6.1.0-cp312-cp312-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:9e6d002c25c76b457e2206442d86ce6bced50f29680017d47b64420013df033d", size = 10149443, upload-time = "2024-05-04T22:16:52.739Z" },
+    { url = "https://files.pythonhosted.org/packages/31/cc/a5f231d1d12a3a9fd470d57f60c9dc403182e24abb00700d47d245a4c6a8/astropy-6.1.0-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:bff187694897c25476578b0332dc1a33953c54c4e121d830411125567e7fadfd", size = 10227355, upload-time = "2024-05-04T22:16:56.213Z" },
+    { url = "https://files.pythonhosted.org/packages/d9/c2/309dcbf8f245525f4eb2b7775c5f5f87fefbcb0ffe2f5487cf47e94113c8/astropy-6.1.0-cp312-cp312-musllinux_1_1_x86_64.whl", hash = "sha256:e86e1dc8c635ae8a19b38600d15446e015b7661d5a3dc6f6e385a291263af958", size = 10286463, upload-time = "2024-05-04T22:16:59.583Z" },
+    { url = "https://files.pythonhosted.org/packages/b6/3f/13c7891ec09606da53c925fae8ae1980258dd24c9feafe98c19fc15d3a91/astropy-6.1.0-cp312-cp312-win32.whl", hash = "sha256:ce39bea34a9ede4b9da76b88c077c2c6e67555a95858bc14fbd66eefd747536b", size = 6247904, upload-time = "2024-05-04T22:17:03.112Z" },
+    { url = "https://files.pythonhosted.org/packages/3f/d1/8ed15e4fa359385f88816c8af345b1a9774ecd222bf67625f7459375dfe0/astropy-6.1.0-cp312-cp312-win_amd64.whl", hash = "sha256:89ef4b2131b232bf43eaacf55ea7ed3d61aebc7e14b25a2611b0952e42f5e9a9", size = 6373259, upload-time = "2024-05-04T22:17:05.687Z" },
+]
+
+[package.optional-dependencies]
+recommended = [
+    { name = "matplotlib" },
+    { name = "scipy" },
 ]
 
 [[package]]
@@ -376,14 +408,22 @@ wheels = [
 name = "hinode-iris-2025-astropy-modeling"
 version = "0.1.0"
 source = { virtual = "." }
-dependencies = [
-    { name = "astropy", extra = ["recommended"] },
+
+[package.dev-dependencies]
+before = [
+    { name = "astropy", version = "6.1.0", source = { registry = "https://pypi.org/simple" }, extra = ["recommended"], marker = "extra == 'group-33-hinode-iris-2025-astropy-modeling-before'" },
+]
+latest = [
+    { name = "astropy", version = "7.1.0", source = { registry = "https://pypi.org/simple" }, extra = ["recommended"], marker = "extra == 'group-33-hinode-iris-2025-astropy-modeling-latest'" },
     { name = "dask" },
     { name = "sunpy" },
 ]
 
 [package.metadata]
-requires-dist = [
+
+[package.metadata.requires-dev]
+before = [{ name = "astropy", extras = ["recommended"], specifier = "<=6.1.0" }]
+latest = [
     { name = "astropy", extras = ["recommended"], specifier = ">=7.1.0" },
     { name = "dask", specifier = ">=2025.5.1" },
     { name = "sunpy", specifier = ">=6.1.1" },
@@ -863,11 +903,11 @@ name = "sunpy"
 version = "6.1.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "astropy" },
+    { name = "astropy", version = "7.1.0", source = { registry = "https://pypi.org/simple" } },
     { name = "fsspec" },
     { name = "numpy" },
     { name = "packaging" },
-    { name = "parfive", extra = ["ftp"] },
+    { name = "parfive", extra = ["ftp"], marker = "extra == 'group-33-hinode-iris-2025-astropy-modeling-latest'" },
     { name = "pyerfa" },
     { name = "requests" },
 ]

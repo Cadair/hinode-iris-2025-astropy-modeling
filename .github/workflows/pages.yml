@@ -23,7 +23,7 @@ jobs:
           python-version-file: "pyproject.toml"
 
       - name: Sync uv env
-        run: uv sync --locked --all-extras
+        run: uv sync --locked --group latest
 
       - name: Build talk
         run: uv run ./export.sh

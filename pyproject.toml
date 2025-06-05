@@ -4,8 +4,21 @@ version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.12"
-dependencies = [
+
+[dependency-groups]
+latest = [
     "astropy[recommended]>=7.1.0",
     "dask>=2025.5.1",
     "sunpy>=6.1.1",
+]
+before = [
+    "astropy[recommended]<=6.1.0",
+]
+
+[tool.uv]
+conflicts = [
+    [
+      { group = "latest" },
+      { group = "before" },
+    ],
 ]
