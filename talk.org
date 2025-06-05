@@ -18,14 +18,6 @@ plt.style.use("bmh")
 plt.rcParams["savefig.transparent"] = True
 #+end_src
 
-#+begin_src sh :exports none :results none
-UV_PROJECT_ENVIRONMENT=".venv-before" uv sync --locked --group before
-#+end_src
-
-#+begin_src sh :exports none :results none
-UV_PROJECT_ENVIRONMENT=".venv" uv sync --locked --group latest
-#+end_src
-
 #+TITLE: Fast Parallel Line Fitting with Astropy
 #+AUTHOR: Stuart Mumford
 #+REVEAL_TITLE_SLIDE: <h3>%t</h3>

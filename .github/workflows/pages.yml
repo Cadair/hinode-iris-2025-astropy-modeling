@@ -22,14 +22,16 @@ jobs:
         with:
           python-version-file: "pyproject.toml"
 
-      - name: Sync uv env
-        run: uv sync --locked --group latest
+      - name: Make uv envs
+        run: |
+          uv sync --locked --group latest
+          UV_PROJECT_ENVIRONMENT=".venv-before" uv sync --locked --group before
 
       - name: Build talk
         run: uv run ./export.sh
 
       - name: Purge venv
-        run: rm -rf .venv
+        run: rm -rf .venv .venv-before
 
       - name: Upload static files as artifact
         id: deployment
