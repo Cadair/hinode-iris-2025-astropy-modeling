@@ -11,6 +11,9 @@ jobs:
         with:
           submodules: true
 
+      - name: Install emacs
+        run: sudo snap install emacs --classic
+
       - name: Install uv
         uses: astral-sh/setup-uv@v5
 
@@ -21,12 +24,6 @@ jobs:
 
       - name: Sync uv env
         run: uv sync --locked --all-extras
-
-      - name: Install emacs
-        run: |
-          sudo add-apt-repository -y ppa:ubuntuhandbook1/emacs
-          sudo apt-get update -y
-          sudo DEBIAN_FRONTEND=noninteractive apt-get install -y emacs-nox emacs-common
 
       - name: Build talk
         run: uv run ./export.sh
