@@ -146,6 +146,8 @@ plt.plot(wave, initial_model(wave))
   :PROPERTIES:
   :CUSTOM_ID: benchmarking
   :END:
+
+# Setup the Fitter
 #+NAME: fitting_setup
 #+begin_src python :results none :eval never :exports none
 from astropy.modeling import fitting
@@ -158,12 +160,10 @@ y *= np.random.normal(0, 0.2, wave.shape)
 fit_g = fitting.TRFLSQFitter()
 #+end_src
 
-#+NAME: fit_initial_model
-#+begin_src python :eval never :exports none
-fit_g(initial_model, wave, y)
-#+end_src
+# Build a timeit script, but don't evaluate it or export it
+# We evaluate it in two differnent code blocks below with different venvs
 #+NAME: run_timeit
-#+begin_src python :results none :eval never :exports none
+#+begin_src python :results none :eval never :exports none :noweb yes
 import timeit
 import astropy
 
@@ -174,25 +174,28 @@ setup_script = """\
 <<fitting_setup>>
 """
 
-time_taken = timeit.timeit("<<fit_initial_model>>", setup=setup_script, number=number_of_fits)
+time_taken = min(timeit.repeat("fit_g(initial_model, wave, y)", setup=setup_script, number=number_of_fits, repeat=5))
 print(f"Running {number_of_fits} fits with astropy {astropy.__version__} took {time_taken:1.5f}s")
 #+end_src
 
-#+begin_src python :eval never :exports both :noweb yes
+# Export the timeit script to the slide in a pretty way
+#+begin_src python :eval never :exports code :noweb yes
+<<double_gaussian_setup>>
 <<fitting_setup>>
 <<fit_initial_model>>
 #+end_src
 
-#+begin_src python :python .venv-before/bin/python :noweb yes :exports results :results output
+# Run both versions of the timeit script
+#+begin_src python :python .venv-before/bin/python :noweb yes :exports results :results output :cache yes
 <<run_timeit>>
 #+end_src
 
 #+RESULTS:
-: Running 100 fits with astropy 6.1.0 took 2.37629s
+: Running 100 fits with astropy 6.1.0 took 1.68456s
 
-#+begin_src python :noweb yes :exports results :results output
+#+begin_src python :noweb yes :exports results :results output :cache yes
 <<run_timeit>>
 #+end_src
 
 #+RESULTS:
-: Running 100 fits with astropy 7.1.0 took 1.38826s
+: Running 100 fits with astropy 7.1.0 took 0.64603s
