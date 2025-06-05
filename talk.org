@@ -9,14 +9,17 @@
 #+OPTIONS: num:nil
 #+REVEAL_EXTRA_CSS: org.css
 #+REVEAL_POSTAMBLE: <script>Reveal.configure({ hash:true });</script>
+#+PROPERTY: header-args :noweb strip-export :exports both
 
-#+begin_src emacs-lisp :eval export :exports none
-(message "boo")
-;; Set more reveal options not supported by ox-reveal
-(defun cadair/org-reveal-scripts (scripts)
-  (concat scripts "<script>Reveal.configure({hash:true});</script>"))
-(advice-add 'org-reveal-scripts :filter-return #'cadair/org-reveal-scripts)
+#+NAME: mpl
+#+begin_src python :export none :exports none
+import matplotlib.pyplot as plt
+plt.style.use("bmh")
+plt.rcParams["savefig.transparent"] = True
 #+end_src
+
+#+RESULTS: mpl
+: None
 
 #+TITLE: Fast Parallel Line Fitting with Astropy
 #+AUTHOR: Stuart Mumford
@@ -83,7 +86,21 @@ It integrates well with astropy's physical units package.
 :CUSTOM_ID: model_example
 :END:
 
-#+begin_src python :echo t
+#+begin_src python :session initial-model :exports none
+<<mpl>>
+import numpy as np
+
+fig = plt.figure(figsize=(10, 3))
+#+end_src
+
+#+RESULTS:
+
+#+begin_src python :results graphics file output :file ./images/generated/initial_model.svg :session initial-model
+import astropy.units as u
+import astropy.modeling.models as m
+
+wave = np.linspace(start=76, stop=77.5, num=1000) * u.nm
+
 NIV_wave = 76.51 * u.nm
 NeVIII_wave = 77.04 * u.nm
 
@@ -91,5 +108,9 @@ initial_model = (
     m.Gaussian1D(amplitude=1*u.count, mean=NIV_wave, stddev=0.05 * u.nm) +
     m.Gaussian1D(amplitude=1*u.count, mean=NeVIII_wave, stddev=0.05 * u.nm)
 )
-print(initial_model)
+
+plt.plot(wave, initial_model(wave))
 #+end_src
+
+#+RESULTS:
+[[file:./images/generated/initial_model.svg]]
