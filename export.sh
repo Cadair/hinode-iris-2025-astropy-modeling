@@ -12,7 +12,7 @@ progn="(progn
     :vc t
     :load-path \"$(pwd)/src/emacs/emacs-htmlize/\")
   (require 'ox-reveal)
-  (org-babel-do-load-languages 'org-babel-load-languages '((python . t)))
+  (org-babel-do-load-languages 'org-babel-load-languages '((python . t) (shell . t)))
   (setq org-confirm-babel-evaluate nil)
   (org-reveal-export-to-html))"
 
