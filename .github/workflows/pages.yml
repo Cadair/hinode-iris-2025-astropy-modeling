@@ -28,6 +28,9 @@ jobs:
       - name: Build talk
         run: uv run ./export.sh
 
+      - name: Purge venv
+        run: rm -rf .venv
+
       - name: Upload static files as artifact
         id: deployment
         uses: actions/upload-pages-artifact@v3
