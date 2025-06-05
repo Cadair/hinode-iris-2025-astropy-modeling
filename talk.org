@@ -10,22 +10,38 @@
 #+REVEAL_EXTRA_CSS: org.css
 #+REVEAL_POSTAMBLE: <script>Reveal.configure({ hash:true });</script>
 
+#+begin_src emacs-lisp :eval export :exports none
+(message "boo")
+;; Set more reveal options not supported by ox-reveal
+(defun cadair/org-reveal-scripts (scripts)
+  (concat scripts "<script>Reveal.configure({hash:true});</script>"))
+(advice-add 'org-reveal-scripts :filter-return #'cadair/org-reveal-scripts)
+#+end_src
+
 #+TITLE: Fast Parallel Line Fitting with Astropy
 #+AUTHOR: Stuart Mumford
 #+REVEAL_TITLE_SLIDE: <h3>%t</h3>
 #+REVEAL_TITLE_SLIDE: <h4>%a</h4>
-#+REVEAL_TITLE_SLIDE: <div class="three-columns" style="align-items: center;"><a href="https://aperio.software"><img src='images/aperio.svg'/></a><div></div><a href="https://sunpy.org"><img src='images/sunpy.svg'/></a></div>
+#+REVEAL_TITLE_SLIDE: <div class="three-columns" style="align-items: center;"><a href="https://aperio.software"><img src='images/aperio.svg'/></a><a href="https://asttropy.org"><img src='images/astropy_logo_small.svg'/></a><a href="https://sunpy.org"><img src='images/sunpy.svg'/></a></div>
+
+#+BEGIN_NOTES
+Talk Objectives:
+
+- Understand what Astropy Modeling is, and why it's useful
+- Understand the performace penalty of fitting many spectra
+- Understand how the   
+#+END_NOTES
 
 * Me
 :PROPERTIES:
 :CUSTOM_ID: me
 :END:
 
-#+REVEAL_HTML: <div class='left-large'>
+#+REVEAL_HTML: <div class='two-columns'><div style="width: 66%;">
 
 I have a PhD in numerical solar physics from Sheffield.
 
-I've been Lead Developer of SunPy since ~2014
+I've been Lead Developer of SunPy since ~2012
 
 Now run Apeiro Software - A company doing Open Source software development for Astro and Solar Physics
 
@@ -33,49 +49,47 @@ Now run Apeiro Software - A company doing Open Source software development for A
 Find me online:
 
 - [[https://cadair.com][cadair.com]]
+- [[https://github.com/Cadair][@Cadair]] on GitHub
 - [[https://matrix.to/#/@cadair:cadair.com][@cadair:cadair.com]] on Matrix
 - [[https://mastodon.matrix.org/@Cadair][@cadair@nheko.io]] on Mastodon
-- [[https://github.com/Cadair][@Cadair]] on GitHub
 
-#+REVEAL_HTML: </div>
-
-#+REVEAL_HTML: <div class='right-small'>
+#+REVEAL_HTML: </div><div>
 
 #+attr_html: :width 100%
 [[./images/cadair.jpg]]
 
-#+REVEAL_HTML: </div>
+#+REVEAL_HTML: </div></div>
 
-# Some Maths
-* Maths!
+#+BEGIN_NOTES
+-  A year off in 2014 to finish my thesis.
+#+END_NOTES
 
-${n! \over k!(n-k)!} = {n \choose k}$
+* Astropy Modeling
+:PROPERTIES:
+:CUSTOM_ID: astropy_intro
+:END:
 
-\begin{equation}
-x=\sqrt{b}
-\end{equation}
+#+ATTR_REVEAL: :frag t
+Astropy modeling is a framework for representing, evaluating and fitting models.
 
-If $a^2=b$ and \( b=2 \), then the solution must be either $$ a=+\sqrt{2} $$ or \[ a=-\sqrt{2} \].
+#+ATTR_REVEAL: :frag t
+It's focus is on approachable code, expressively describing and evaluating the models.
 
-* Code example with Babel
+#+ATTR_REVEAL: :frag t
+It integrates well with astropy's physical units package.
 
-#+begin_src python :session example :exports both
-  msg = "Hello World"
+** Quick Example
+:PROPERTIES:
+:CUSTOM_ID: model_example
+:END:
 
-  msg
+#+begin_src python :echo t
+NIV_wave = 76.51 * u.nm
+NeVIII_wave = 77.04 * u.nm
+
+initial_model = (
+    m.Gaussian1D(amplitude=1*u.count, mean=NIV_wave, stddev=0.05 * u.nm) +
+    m.Gaussian1D(amplitude=1*u.count, mean=NeVIII_wave, stddev=0.05 * u.nm)
+)
+print(initial_model)
 #+end_src
-
-#+RESULTS:
-: Hello World
-
-* AIA
-  :PROPERTIES:
-  :reveal_background: ./images/fulldiskmulticolor.jpg
-  :reveal_background_trans: slide
-  :END:
-
-* DKIST
-  :PROPERTIES:
-  :reveal_background:
-  :reveal_extra_attr: data-background-video="https://nso1.b-cdn.net/wp-content/uploads/2016/04/DKIST-First-Light-MZ-crop1-loop_FHD-H264.mp4" data-background-video-loop
-  :END:
