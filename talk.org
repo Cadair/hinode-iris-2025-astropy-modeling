@@ -82,6 +82,9 @@ It integrates well with astropy's physical units package.
 :PROPERTIES:
 :CUSTOM_ID: model_example
 :END:
+#+BEGIN_NOTES
+Talk though the code, but quickly.
+#+END_NOTES
 
 #+begin_src python :session initial-model :exports none
 <<mpl>>
@@ -94,10 +97,10 @@ fig = plt.figure(figsize=(10, 3))
 import astropy.units as u
 import astropy.modeling.models as m
 
-wave = np.linspace(start=76, stop=77.5, num=1000) * u.nm
-
 NIV_wave = 76.51 * u.nm
 NeVIII_wave = 77.04 * u.nm
+
+wave = np.linspace(start=76, stop=77.5, num=1000) * u.nm
 
 initial_model = (
     m.Gaussian1D(amplitude=1*u.count, mean=NIV_wave, stddev=0.05 * u.nm) +
@@ -106,3 +109,27 @@ initial_model = (
 
 plt.plot(wave, initial_model(wave))
 #+end_src
+
+#+RESULTS:
+[[file:./images/generated/initial_model.svg]]
+
+* How it started
+:PROPERTIES:
+:CUSTOM_ID: how_it_started
+:END:
+
+#+REVEAL_HTML: <div class="two-columns"><div>
+
+[[file:./images/astropy_3670.png]]
+
+#+REVEAL_HTML: </div><div>
+
+[[file:./images/astropy_14610.png]]
+
+#+REVEAL_HTML: </div>
+
+#+BEGIN_NOTES
+- The issue of being able to apply a non-linear fitter to a set of models has existed for a long time.
+- For linear fitters the minima of all models is the minima of every model, not true for non-linear fitters.
+- Therefore each non-linear fit needs to be evaluated independently
+#+END_NOTES
