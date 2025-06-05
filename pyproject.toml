@@ -1,0 +1,11 @@
+[project]
+name = "hinode-iris-2025-astropy-modeling"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "astropy[recommended]>=7.1.0",
+    "dask>=2025.5.1",
+    "sunpy>=6.1.1",
+]
