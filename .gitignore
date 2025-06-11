@@ -3,3 +3,5 @@
 talk.html
 images/generated/
 src/emacs/elpa/
+**/.ipynb_checkpoints/*
+*.ipynb
