@@ -107,8 +107,8 @@ NeVIII_wave = 77.04 * u.nm
 wave = np.linspace(start=76, stop=77.5, num=1000) * u.nm
 
 initial_model = (
-    m.Gaussian1D(amplitude=1*u.count, mean=NIV_wave, stddev=0.05 * u.nm) +
-    m.Gaussian1D(amplitude=1*u.count, mean=NeVIII_wave, stddev=0.05 * u.nm)
+    m.Gaussian1D(amplitude=1*u.count, mean=NIV_wave, stddev=0.06 * u.nm) +
+    m.Gaussian1D(amplitude=1*u.count, mean=NeVIII_wave, stddev=0.04 * u.nm)
 )
 #+end_src
 
@@ -142,7 +142,12 @@ plt.plot(wave, initial_model(wave))
 - Therefore each non-linear fit needs to be evaluated independently.
 #+END_NOTES
 
-* Benchmarking
+
+* Data Scale
+
+* The Fix
+
+** Benchmarking
   :PROPERTIES:
   :CUSTOM_ID: benchmarking
   :END:
@@ -174,7 +179,7 @@ setup_script = """\
 <<fitting_setup>>
 """
 
-time_taken = min(timeit.repeat("fit_g(initial_model, wave, y)", setup=setup_script, number=number_of_fits, repeat=5))
+time_taken = min(timeit.repeat("fit_g(initial_model, wave, y)", setup=setup_script, number=number_of_fits, repeat=10))
 print(f"Running {number_of_fits} fits with astropy {astropy.__version__} took {time_taken:1.5f}s")
 #+end_src
 
@@ -186,16 +191,16 @@ print(f"Running {number_of_fits} fits with astropy {astropy.__version__} took {t
 #+end_src
 
 # Run both versions of the timeit script
-#+begin_src python :python .venv-before/bin/python :noweb yes :exports results :results output :cache yes
+#+begin_src python :python .venv-before/bin/python :noweb yes :exports results :results output :eval no-export
 <<run_timeit>>
 #+end_src
 
 #+RESULTS:
-: Running 100 fits with astropy 6.1.0 took 1.68456s
+: Running 100 fits with astropy 6.1.0 took 1.69645s
 
-#+begin_src python :noweb yes :exports results :results output :cache yes
+#+begin_src python :noweb yes :exports results :results output :eval no-export
 <<run_timeit>>
 #+end_src
 
 #+RESULTS:
-: Running 100 fits with astropy 7.1.0 took 0.64603s
+: Running 100 fits with astropy 7.1.0 took 0.74003s
