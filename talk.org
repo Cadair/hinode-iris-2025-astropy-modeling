@@ -37,6 +37,10 @@ Talk Objectives:
 :CUSTOM_ID: me
 :END:
 
+#+BEGIN_NOTES
+-  A year off in 2014 to finish my thesis.
+#+END_NOTES
+
 #+REVEAL_HTML: <div class='two-columns'><div style="width: 66%;">
 
 I have a PhD in numerical solar physics from Sheffield.
@@ -60,16 +64,12 @@ Find me online:
 
 #+REVEAL_HTML: </div></div>
 
-#+BEGIN_NOTES
--  A year off in 2014 to finish my thesis.
-#+END_NOTES
-
 * Astropy Modeling
 :PROPERTIES:
 :CUSTOM_ID: astropy_intro
 :END:
 
-#+ATTR_REVEAL: :frag t
+#+REVEAL_HTML: <div class='two-columns'><div style="width:80%;">
 Astropy modeling is a framework for representing, evaluating and fitting models.
 
 #+ATTR_REVEAL: :frag t
@@ -77,6 +77,9 @@ It's focus is on approachable code, expressively describing and evaluating the m
 
 #+ATTR_REVEAL: :frag t
 It integrates well with astropy's physical units package.
+#+REVEAL_HTML: </div><div>
+[[file:./images/astropy_logo_small.svg]]
+#+REVEAL_HTML: </div></div>
 
 ** Quick Example
 :PROPERTIES:
@@ -126,6 +129,14 @@ plt.plot(wave, initial_model(wave))
 :CUSTOM_ID: how_it_started
 :END:
 
+#+BEGIN_NOTES
+- The issue of being able to apply a non-linear fitter to a set of models has existed for a long time, since 2015.
+- For linear fitters the minima of all models is the minima of every model, not true for non-linear fitters.
+- Therefore each non-linear fit needs to be evaluated independently, which is slow.
+- The EISPAC developers didn't use astropy modeling because it was too slow.
+- It's been a requested feature by the radio astronomy community for a long time.
+#+END_NOTES
+
 #+REVEAL_HTML: <div class="two-columns"><div>
 
 [[file:./images/astropy_3670.png]]
@@ -135,12 +146,6 @@ plt.plot(wave, initial_model(wave))
 [[file:./images/astropy_14610.png]]
 
 #+REVEAL_HTML: </div>
-
-#+BEGIN_NOTES
-- The issue of being able to apply a non-linear fitter to a set of models has existed for a long time.
-- For linear fitters the minima of all models is the minima of every model, not true for non-linear fitters.
-- Therefore each non-linear fit needs to be evaluated independently.
-#+END_NOTES
 
 ** How slow?
 :PROPERTIES:
@@ -178,7 +183,7 @@ from astropy.modeling import fitting
 y = initial_model(wave)
 y *= np.random.normal(0, 0.2, wave.shape)
 
-# Fit the model to the data
+# Setup the fitter
 fit_g = fitting.TRFLSQFitter()
 #+end_src
 
@@ -203,8 +208,12 @@ print(f"Running {number_of_fits} fits with astropy {astropy.__version__} took {t
 # Export the timeit script to the slide in a pretty way
 #+begin_src python :eval never :exports code :noweb yes
 <<double_gaussian_setup>>
+#+END_SRC
+#+begin_src python :eval never :exports code :noweb yes
 <<fitting_setup>>
 <<fit_initial_model>>
+# Fit the model
+fit_g(initial_model, wave, y)
 #+end_src
 
 # Run both versions of the timeit script
@@ -213,14 +222,14 @@ print(f"Running {number_of_fits} fits with astropy {astropy.__version__} took {t
 #+end_src
 
 #+RESULTS:
-: Running 100 fits with astropy 6.1.0 took 1.69645s
+: Running 100 fits with astropy 6.1.0 took 1.96483s
 
 #+begin_src python :noweb yes :exports results :results output :eval no-export
 <<run_timeit>>
 #+end_src
 
 #+RESULTS:
-: Running 100 fits with astropy 7.1.0 took 0.74003s
+: Running 100 fits with astropy 7.1.0 took 0.70614s
 
 *** Improvements to Serial Fixes
 :PROPERTIES:
