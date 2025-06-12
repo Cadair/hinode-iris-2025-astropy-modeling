@@ -121,7 +121,7 @@ plt.plot(wave, initial_model(wave))
 #+RESULTS:
 [[file:./images/generated/initial_model.svg]]
 
-* Approachable, but slow
+* But it's too slow!
 :PROPERTIES:
 :CUSTOM_ID: how_it_started
 :END:
@@ -142,12 +142,29 @@ plt.plot(wave, initial_model(wave))
 - Therefore each non-linear fit needs to be evaluated independently.
 #+END_NOTES
 
+** How slow?
+:PROPERTIES:
+:CUSTOM_ID: data_scale
+:END:
 
-* Data Scale
+| Data                 | Number of Spectra | Time to fit with astropy 6.1 |
+|----------------------+-------------------+------------------------------|
+| EIS                  |                   |                              |
+| IRIS                 | ~ 50 Million      | 10 days                      |
+| Large SPICE Map      | ~ 65 Million      | 13 days                      |
+| ALMA                 | ~ 1-100 Million   | 5 hours - 20 days            |
+| Largest VISP Dataset | ~ 200 Million     | 40 days                      |
+
+* Motivations
 
 * The Fix
 
-** Benchmarking
+** Speeding up Serial Fitting
+:PROPERTIES:
+:CUSTOM_ID: speeding_up
+:END:
+
+*** Benchmarking
   :PROPERTIES:
   :CUSTOM_ID: benchmarking
   :END:
@@ -204,3 +221,43 @@ print(f"Running {number_of_fits} fits with astropy {astropy.__version__} took {t
 
 #+RESULTS:
 : Running 100 fits with astropy 7.1.0 took 0.74003s
+
+*** Improvements to Serial Fixes
+:PROPERTIES:
+:CUSTOM_ID: serial-fixes
+:END:
+
+#+REVEAL_HTML: <div class='two-columns'><div>
+
+[[file:./images/serial_prs/16670.png]]
+
+#+REVEAL_HTML: </div><div>
+
+[[file:./images/serial_prs/16677.png]]
+
+#+REVEAL_HTML: </div></div>
+
+#+attr_html: :width 50%
+[[file:./images/serial_prs/16673.png]]
+
+*** A parallel fitter
+:PROPERTIES:
+:CUSTOM_ID: parallel-fitter
+:END:
+
+#+attr_html: :width 60%
+[[file:./images/parallel_prs/16696.png]]
+
+#+REVEAL_HTML: <div class='two-columns'><div>
+[[file:./images/parallel_prs/16812.png]]
+#+REVEAL_HTML: </div><div>
+[[file:./images/parallel_prs/17033.png]]
+#+REVEAL_HTML: </div></div>
+
+*** Analytical Derivatives of Compound Models
+:PROPERTIES:
+:CUSTOM_ID: derivs
+:END:
+
+#+attr_html: :width 60%
+[[file:./images/serial_prs/17034.png]]
