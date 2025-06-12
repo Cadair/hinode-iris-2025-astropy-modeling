@@ -36,6 +36,13 @@ import dask.bag as db
 ```
 
 ```{code-cell} ipython3
+from dask.distributed import LocalCluster
+cluster = LocalCluster(n_workers=os.cpu_count(), threads_per_worker=1)
+client = cluster.get_client()
+client
+```
+
+```{code-cell} ipython3
 base_path = Path("/data/astropy-fitting-talk/")
 all_files = sorted(list(base_path.glob("*.fits")))
 ```
@@ -78,59 +85,52 @@ initial_models = {
 ```
 
 ```{code-cell} ipython3
-def fit_single_spice_file(filename, initial_models):
-    keys = tuple(initial_models.keys())
-    spice = read_spice_l2_fits([filename])[0, 120:-120, :]
-    assert tuple(spice.keys()) == keys
+first_file
+```
+
+```{code-cell} ipython3
+read_spice_l2_fits(all_files[0:1], windows=["Mg IX 706 - Peak"])["Mg IX 706 - Peak"][0]
+```
+
+```{code-cell} ipython3
+def fit_single_spice_window(file_key):
+    filename, key = file_key
+    spice = read_spice_l2_fits([filename], windows=[key])[key][0, :, 120:220, :100]
 
     # Remove NDMeta because of https://github.com/sunpy/ndcube/issues/847
-    new_items = []
-    for key, cube in spice.items():
-        new_items.append((key, NDCube(cube, meta=dict(cube.meta))))
-    spice = NDCollection(new_items, aligned_axes=tuple(spice.aligned_axes.values()))
-    
-    spice_model_fits = {
-        key: parallel_fit_dask(
+    cube = NDCube(spice, meta=dict(spice.meta))
+
+    return parallel_fit_dask(
             data=cube,
             model=initial_models[key],
             fitter=TRFLSQFitter(),
             fitting_axes=0,
             fitter_kwargs={"filter_non_finite": True}, # Filter out non-finite values,
             scheduler="default",
+            compute=False,
         )
-        for key, cube in spice.items()
-    }
-
-    return filename, spice_model_fits
     
 ```
 
 ```{code-cell} ipython3
-spice, spice_model_fits = fit_single_spice_file(all_files[1], initial_models)
+from itertools import product
 ```
 
 ```{code-cell} ipython3
-from dask.distributed import LocalCluster
-cluster = LocalCluster(n_workers=os.cpu_count(), threads_per_worker=1)
-client = cluster.get_client()
-client
+file_keys = list(product(all_files[:2], initial_models.keys()))
 ```
 
 ```{code-cell} ipython3
-bag_o_files = db.from_sequence(all_files[:10])
+fits = db.from_delayed(list(map(fit_single_spice_window, file_keys)))
 ```
 
 ```{code-cell} ipython3
-fit_bag = dask.bag.map(fit_single_spice_file, bag_o_files, initial_models)
-```
-
-```{code-cell} ipython3
-fit_bag.compute()
+result = {(filename, key): fit for (filename, key), fit in zip(file_keys, fits.compute())}
 ```
 
 ```{code-cell} ipython3
 spice_model_fits = {
-    key: delayed(parallel_fit_dask)(
+    key: parallel_fit_dask(
         data=cube,
         model=average_fits[key],
         fitter=TRFLSQFitter(),
