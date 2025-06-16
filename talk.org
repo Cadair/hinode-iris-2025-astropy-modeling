@@ -448,7 +448,7 @@ peak_shift = ne_viii_fit.mean_1.quantity.to(u.km/u.s, equivalencies=u.doppler_op
 :PROPERTIES:
 :CUSTOM_ID: final_plot
 :END:
-#+begin_src python :session demo :tangle yes :eval no-export :results graphics file output :file ./images/generated/final_demo.svg :exports results
+#+begin_src python :session demo :tangle yes :eval no-export :results graphics file output :file ./images/final_demo.svg :exports results
 from astropy.visualization import ImageNormalize, AsinhStretch
 
 peak_shift = ne_viii_fit.mean_1.quantity.to(u.km/u.s, equivalencies=u.doppler_optical(ne_viii_wave))
@@ -481,7 +481,7 @@ fig.tight_layout()
 #+end_src
 
 #+RESULTS:
-[[file:./images/generated/final_demo.svg]]
+[[file:./images/final_demo.svg]]
 
 * Thanks!
 
