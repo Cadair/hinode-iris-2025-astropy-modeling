@@ -4,6 +4,15 @@ version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.12"
+dependencies = [
+    "bokeh>=3.7.3",
+    "dask>=2025.5.1",
+    "distributed>=2025.5.1",
+    "ipython>=9.3.0",
+    "ndcube>=2.3.0",
+    "sunpy>=6.1.1",
+    "sunraster",
+]
 
 [dependency-groups]
 latest = [

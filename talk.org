@@ -19,7 +19,7 @@ plt.rcParams["savefig.transparent"] = True
 #+end_src
 
 #+TITLE: Fast Parallel Line Fitting with Astropy
-#+AUTHOR: Stuart Mumford
+#+AUTHOR: Stuart Mumford, Thomas Robitaille, Terry Kucera
 #+REVEAL_TITLE_SLIDE: <h3>%t</h3>
 #+REVEAL_TITLE_SLIDE: <h4>%a</h4>
 #+REVEAL_TITLE_SLIDE: <div class="three-columns" style="align-items: center;"><a href="https://aperio.software"><img src='images/aperio.svg'/></a><a href="https://asttropy.org"><img src='images/astropy_logo_small.svg'/></a><a href="https://sunpy.org"><img src='images/sunpy.svg'/></a></div>
@@ -97,6 +97,7 @@ fig = plt.figure(figsize=(10, 3))
 #+end_src
 
 #+RESULTS:
+: None
 
 #+NAME: double_gaussian_setup
 #+begin_src python :exports none :results none
@@ -230,14 +231,14 @@ fit_g(initial_model, wave, y)
 #+end_src
 
 #+RESULTS:
-: Running 100 fits with astropy 6.1.0 took 1.96483s
+: Running 100 fits with astropy 6.1.0 took 1.30462s
 
 #+begin_src python :noweb yes :exports results :results output :eval no-export
 <<run_timeit>>
 #+end_src
 
 #+RESULTS:
-: Running 100 fits with astropy 7.1.0 took 0.70614s
+: Running 100 fits with astropy 7.1.0 took 0.80092s
 
 **\approx3x faster**
 
@@ -296,7 +297,188 @@ It can scale from your laptop to a HPC cluster or cloud providers.
 #+REVEAL_HTML: </div></div>
 
 
-** Show me the +Money+ Fitting
+** Show me the Fitting
 :PROPERTIES:
 :CUSTOM_ID: demo
 :END:
+#+BEGIN_NOTES
+- In this example we are fitting ~95,000 spectra
+#+END_NOTES
+
+#+begin_src python :session demo :results output :eval no-export :exports none :tangle yes :noweb yes
+<<mpl>>
+import warnings
+warnings.simplefilter("ignore")
+
+from astropy.modeling.fitting import parallel_fit_dask, TRFLSQFitter
+import astropy.modeling.models as m
+import astropy.units as u
+import matplotlib.pyplot as plt
+import numpy as np
+
+import dask.distributed
+client = dask.distributed.Client('127.0.0.1:9999')
+print(client)
+#+end_src
+
+#+RESULTS:
+: <Client: 'tcp://127.0.0.1:9999' processes=16 threads=16, memory=31.27 GiB>
+
+
+#+begin_src python :session demo :results output :eval no-export :tangle yes
+from sunraster.instr.spice import read_spice_l2_fits
+
+spice = read_spice_l2_fits("./demo/solo_L2_spice-n-ras_20220402T031537_V22_100663994-000.fits")["Ne VIII 770 - Peak"]
+spice = spice[0, :, 120:-120, :]
+print(spice)
+#+end_src
+
+#+RESULTS:
+: SpectrogramCube
+: ---------------
+: Time Period: ['2022-04-02 03:15:39.607' '2022-04-02 03:29:34.357']
+: Instrument axes: ['spectral' 'slit' 'slit step']
+: Pixel dimensions: (50, 592, 160)
+: Longitude range: [-2512.60717534 -1838.1924016 ] arcsec
+: Latitude range: [281.39944631 967.91604093] arcsec
+: Spectral range: [7.68202290e-08 7.72980623e-08] m
+: Data unit: W / (nm sr m2)
+
+#+begin_src python :session demo :results none :eval no-export :exports none :tangle yes
+spice.meta = dict(spice.meta)
+#+END_SRC
+
+#+begin_src python :session demo :results output :eval no-export :tangle yes
+wl_sum = spice.rebin((-1, 1, 1)).squeeze()
+print(wl_sum)
+#+end_src
+
+#+RESULTS:
+#+begin_example
+SpectrogramCube
+---------------
+Time Period: ['2022-04-02 03:15:39.607' '2022-04-02 03:29:34.357']
+Instrument axes: ['spectral' 'slit' 'slit step']
+Pixel dimensions: (592, 160)
+Longitude range: [-2512.60717534 -1838.1924016 ] arcsec
+Latitude range: [281.39944631 967.91604093] arcsec
+Spectral range: None
+Data unit: W / (nm sr m2)
+94720
+#+end_example
+** 
+:PROPERTIES:
+:CUSTOM_ID: final_model_setup
+:END:
+#+begin_src python :session demo :eval no-export :results output :tangle yes
+ne_viii_wave = 77.04 * u.nm
+
+ne_viii_model = (
+    m.Const1D(amplitude=0.1 * spice.unit) +
+    m.Gaussian1D(amplitude=4 * spice.unit, mean=ne_viii_wave, stddev=0.03 * u.nm)
+)
+print(ne_viii_model)
+#+end_src
+
+#+RESULTS:
+#+begin_example
+Model: CompoundModel
+Inputs: ('x',)
+Outputs: ('y',)
+Model set size: 1
+Expression: [0] + [1]
+Components: 
+    [0]: <Const1D(amplitude=0.1 W / (nm sr m2))>
+
+    [1]: <Gaussian1D(amplitude=4. W / (nm sr m2), mean=77.04 nm, stddev=0.03 nm)>
+Parameters:
+     amplitude_0    amplitude_1   mean_1 stddev_1
+    W / (nm sr m2) W / (nm sr m2)   nm      nm   
+    -------------- -------------- ------ --------
+               0.1            4.0  77.04     0.03
+#+end_example
+
+** 
+:PROPERTIES:
+:CUSTOM_ID: final_fit
+:END:
+#+begin_src python :session demo :results output :eval no-export :tangle yes
+ne_viii_fit = parallel_fit_dask(
+                  data=spice,
+                  model=ne_viii_model,
+                  fitter=TRFLSQFitter(),
+                  fitting_axes=0,
+                  fitter_kwargs={"filter_non_finite": True}, # Filter out non-finite values,
+                  scheduler="default",
+              )
+print(ne_viii_fit)
+
+#+end_src
+
+#+RESULTS:
+#+begin_example
+Model: CompoundModel
+Inputs: ('x',)
+Outputs: ('y',)
+Model set size: 1
+Expression: [0] + [1]
+Components: 
+    [0]: <Const1D(amplitude=[[-0.01186777, -0.04243589, -0.03180571, ..., -0.00036079,  0.03496337, 0.05961642], [-0.14270691, -0.12905839, -0.14624846, ..., -0.14334128, -0.05594947, 0.03208918], [-0.01989729, -0.2431361 , -0.00001996, ..., -0.11942552,  0.07220234, 0.04301093], ..., [-0.04874417, -0.02015991,  0.14161219, ...,  0.07509156,  0.08982525, 0.04636003], [ 0.01019354, -0.16298965,  0.15877228, ...,  0.12776969,  0.1193767 , 0.01180686], [ 0.12107636, -0.13201061,  0.21371312, ...,  0.09372002,  0.08507842, 0.14460027]] W / (nm sr m2))>
+
+    [1]: <Gaussian1D(amplitude=[[1.19132615, 0.82196006, 0.97784668, ..., 1.02610904, 0.71653108, 1.51190864], [1.00756516, 0.94365588, 1.12815933, ..., 1.24061097, 1.02942899, 1.35983955], [0.809575  , 1.21632214, 0.8736834 , ..., 1.40974561, 1.40700438, 1.33264445], ..., [2.00584294, 1.62791731, 2.58334974, ..., 1.25441368, 1.26217819, 0.77680149], [2.0333365 , 1.73636002, 2.91476763, ..., 1.26140381, 1.19989641, 1.0181316 ], [2.39278912, 2.1577881 , 3.15922599, ..., 1.3036854 , 1.86577543, 2.69302212]] W / (nm sr m2), mean=[[0.00000008, 0.00000008, 0.00000008, ..., 0.00000008, 0.00000008, 0.00000008], [0.00000008, 0.00000008, 0.00000008, ..., 0.00000008, 0.00000008, 0.00000008], [0.00000008, 0.00000008, 0.00000008, ..., 0.00000008, 0.00000008, 0.00000008], ..., [0.00000008, 0.00000008, 0.00000008, ..., 0.00000008, 0.00000008, 0.00000008], [0.00000008, 0.00000008, 0.00000008, ..., 0.00000008, 0.00000008, 0.00000008], [0.00000008, 0.00000008, 0.00000008, ..., 0.00000008, 0.00000008, 0.00000008]] m, stddev=[[0., 0., 0., ..., 0., 0., 0.], [0., 0., 0., ..., 0., 0., 0.], [0., 0., 0., ..., 0., 0., 0.], ..., [0., 0., 0., ..., 0., 0., 0.], [0., 0., 0., ..., 0., 0., 0.], [0., 0., 0., ..., 0., 0., 0.]] m)>
+Parameters:
+                    amplitude_0                                amplitude_1                ...                     stddev_1                   
+                   W / (nm sr m2)                             W / (nm sr m2)              ...                        m                       
+    -------------------------------------------- ---------------------------------------- ... -----------------------------------------------
+    -0.011867771410507323 .. 0.14460026515655722 1.1913261479082256 .. 2.6930221157273833 ... 2.9275851812115964e-11 .. 5.208923916070005e-12
+#+end_example
+
+Calculate the doppler veloicty from the resultant model parameters.
+#+begin_src python :session demo :results output :eval no-export :tangle yes
+peak_shift = ne_viii_fit.mean_1.quantity.to(u.km/u.s, equivalencies=u.doppler_optical(ne_viii_wave))
+#+end_src
+
+** 
+:PROPERTIES:
+:CUSTOM_ID: final_plot
+:END:
+#+begin_src python :session demo :tangle yes :eval no-export :results graphics file output :file ./images/generated/final_demo.svg :exports results
+from astropy.visualization import ImageNormalize, AsinhStretch
+
+peak_shift = ne_viii_fit.mean_1.quantity.to(u.km/u.s, equivalencies=u.doppler_optical(ne_viii_wave))
+
+fig, axs = plt.subplots(ncols=2, subplot_kw=dict(projection=wl_sum), figsize=(9, 4.5))
+fig.suptitle(f"SPICE - {spice.meta["EXTNAME"]} - {spice.meta["DATE-AVG"]}")
+
+norm = ImageNormalize(wl_sum.data, stretch=AsinhStretch(0.05))
+im = wl_sum.plot(axes=axs[0], norm=norm)
+fig.colorbar(axs[0].get_images()[0], ax=axs[0], extend="both", label=f"{wl_sum.unit:latex}", shrink=0.8)
+axs[0].set_title("Data (summed over wavelength)", pad=40)
+
+g_max = np.percentile(np.abs(peak_shift.value), 98)
+im_mean = axs[1].imshow(peak_shift.value, cmap="coolwarm", vmin=-g_max, vmax=g_max)
+fig.colorbar(im_mean, ax=axs[1], extend="both", label=f"Velocity from Doppler shift [{peak_shift.unit:latex}]", shrink=0.8)
+axs[1].set_title(f"Ne VIII ({ne_viii_wave:latex})", pad=40)
+
+for ax in axs:
+    ax.set_aspect(spice.meta["CDELT2"] / spice.meta["CDELT1"])
+    ax.coords[0].set_ticklabel(exclude_overlapping=True)
+    ax.coords[0].set_axislabel("Helioprojective Longitude")
+    ax.coords[1].set_axislabel("Helioprojective Latitude")
+    ax.coords[2].set_axislabel("Time [s]")
+    ax.coords[2].set_ticklabel(exclude_overlapping=True)
+    ax.coords[0].grid(False)
+    ax.coords[1].grid(False)
+    ax.coords[2].grid(False)
+
+fig.tight_layout()
+#+end_src
+
+#+RESULTS:
+[[file:./images/generated/final_demo.svg]]
+
+* Thanks!
+
+Thanks to the Solar Orbiter/SPICE team via NASA cooperative agreement 80NSSC21M0180, who funded this.
+
+Thanks to various members of the Astropy and SunPy communities for their feedback and review.
