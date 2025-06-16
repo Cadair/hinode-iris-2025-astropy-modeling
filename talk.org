@@ -29,7 +29,7 @@ Talk Objectives:
 
 - Understand what Astropy Modeling is, and why it's useful
 - Understand the performace penalty of fitting many spectra
-- Understand how the   
+- Understand how contributing to upstream has helped everyone, **and made it easier to use**
 #+END_NOTES
 
 * Me
@@ -151,16 +151,18 @@ plt.plot(wave, initial_model(wave))
 :PROPERTIES:
 :CUSTOM_ID: data_scale
 :END:
+#+begin_NOTES
+- These are **very rough** numbers.
+- Number of spectra on the high end for all the instruments
+#+END_NOTES
 
 | Data                 | Number of Spectra | Time to fit with astropy 6.1 |
 |----------------------+-------------------+------------------------------|
-| EIS                  |                   |                              |
+| EIS                  | ~ 2.5 Million     | 12 hours                     |
 | IRIS                 | ~ 50 Million      | 10 days                      |
-| Large SPICE Map      | ~ 65 Million      | 13 days                      |
+| SPICE                | ~ 65 Million      | 13 days                      |
 | ALMA                 | ~ 1-100 Million   | 5 hours - 20 days            |
 | Largest VISP Dataset | ~ 200 Million     | 40 days                      |
-
-* Motivations
 
 * The Fix
 
@@ -173,6 +175,12 @@ plt.plot(wave, initial_model(wave))
   :PROPERTIES:
   :CUSTOM_ID: benchmarking
   :END:
+
+  #+BEGIN_NOTES
+- Talk through the fit code.
+- Fitting a double gaussian is a lot faster in serial.
+- Following slides talk about how, so just talk about why.
+#+END_NOTES
 
 # Setup the Fitter
 #+NAME: fitting_setup
@@ -231,6 +239,8 @@ fit_g(initial_model, wave, y)
 #+RESULTS:
 : Running 100 fits with astropy 7.1.0 took 0.70614s
 
+**\approx3x faster**
+
 *** Improvements to Serial Fixes
 :PROPERTIES:
 :CUSTOM_ID: serial-fixes
@@ -249,20 +259,6 @@ fit_g(initial_model, wave, y)
 #+attr_html: :width 50%
 [[file:./images/serial_prs/16673.png]]
 
-*** A parallel fitter
-:PROPERTIES:
-:CUSTOM_ID: parallel-fitter
-:END:
-
-#+attr_html: :width 60%
-[[file:./images/parallel_prs/16696.png]]
-
-#+REVEAL_HTML: <div class='two-columns'><div>
-[[file:./images/parallel_prs/16812.png]]
-#+REVEAL_HTML: </div><div>
-[[file:./images/parallel_prs/17033.png]]
-#+REVEAL_HTML: </div></div>
-
 *** Analytical Derivatives of Compound Models
 :PROPERTIES:
 :CUSTOM_ID: derivs
@@ -270,3 +266,37 @@ fit_g(initial_model, wave, y)
 
 #+attr_html: :width 60%
 [[file:./images/serial_prs/17034.png]]
+
+** Fitting in Parallel
+:PROPERTIES:
+:CUSTOM_ID: parallel-fitter
+:END:
+
+#+REVEAL_HTML: <div class='two-columns'><div>
+#+attr_html: :width 60%
+[[file:./images/Dask-Logo-lockup-Primary.svg]]
+
+#+BEGIN_QUOTE
+Dask is a Python library for parallel and distributed computing.
+#+END_QUOTE
+
+It can scale from your laptop to a HPC cluster or cloud providers.
+
+#+ATTR_REVEAL: :frag t
+**To use astropy's parallel fitting on a single machine, you need to know almost nothing about dask!**
+
+
+#+REVEAL_HTML: </div><div>
+#+attr_html: :style margin-bottom:0px; margin-top:-20px; :width 80%
+[[file:./images/parallel_prs/16696.png]]
+#+attr_html: :style margin-bottom:0px; margin-top:-20px; :width 80%
+[[file:./images/parallel_prs/16812.png]]
+#+attr_html: :style margin-bottom:0px; margin-top:-20px; :width 80%
+[[file:./images/parallel_prs/17033.png]]
+#+REVEAL_HTML: </div></div>
+
+
+** Show me the +Money+ Fitting
+:PROPERTIES:
+:CUSTOM_ID: demo
+:END:
