@@ -484,7 +484,16 @@ fig.tight_layout()
 [[file:./images/final_demo.svg]]
 
 * Thanks!
+:PROPERTIES:
+:CUSTOM_ID: thanks
+:END:
 
 Thanks to the Solar Orbiter/SPICE team via NASA cooperative agreement 80NSSC21M0180, who funded this.
 
 Thanks to various members of the Astropy and SunPy communities for their feedback and review.
+
+**Links**
+
+- Slides - [[https://cadair.github.io/hinode-iris-2025-astropy-modeling]]
+- SPICE Fitting Tutorial - ???
+- Astropy Documentation - [[https://docs.astropy.org/en/stable/modeling/parallel-fitting.html]]
