@@ -349,23 +349,20 @@ spice.meta = dict(spice.meta)
 #+END_SRC
 
 #+begin_src python :session demo :results output :eval no-export :tangle yes
-wl_sum = spice.rebin((-1, 1, 1)).squeeze()
+wl_sum = spice.rebin((-1, 1, 1), operation=np.sum).squeeze()
 print(wl_sum)
 #+end_src
 
 #+RESULTS:
-#+begin_example
-SpectrogramCube
----------------
-Time Period: ['2022-04-02 03:15:39.607' '2022-04-02 03:29:34.357']
-Instrument axes: ['spectral' 'slit' 'slit step']
-Pixel dimensions: (592, 160)
-Longitude range: [-2512.60717534 -1838.1924016 ] arcsec
-Latitude range: [281.39944631 967.91604093] arcsec
-Spectral range: None
-Data unit: W / (nm sr m2)
-94720
-#+end_example
+: SpectrogramCube
+: ---------------
+: Time Period: ['2022-04-02 03:15:39.607' '2022-04-02 03:29:34.357']
+: Instrument axes: ['spectral' 'slit' 'slit step']
+: Pixel dimensions: (592, 160)
+: Longitude range: [-2512.60717534 -1838.1924016 ] arcsec
+: Latitude range: [281.39944631 967.91604093] arcsec
+: Spectral range: None
+: Data unit: W / (nm sr m2)
 ** 
 :PROPERTIES:
 :CUSTOM_ID: final_model_setup
@@ -405,7 +402,7 @@ Parameters:
 #+begin_src python :session demo :results output :eval no-export :tangle yes
 ne_viii_fit = parallel_fit_dask(
                   data=spice,
-                  model=ne_viii_model,
+                  model=ne_viii_model,, operation=np.sum
                   fitter=TRFLSQFitter(),
                   fitting_axes=0,
                   fitter_kwargs={"filter_non_finite": True}, # Filter out non-finite values,
@@ -432,7 +429,16 @@ Parameters:
     -------------------------------------------- ---------------------------------------- ... -----------------------------------------------
     -0.011867771410507323 .. 0.14460026515655722 1.1913261479082256 .. 2.6930221157273833 ... 2.9275851812115964e-11 .. 5.208923916070005e-12
 #+end_example
+** 
+:PROPERTIES:
+:CUSTOM_ID: distributed_dashboard
+:END:
 
+#+REVEAL_HTML: <video data-src="./images/distributed.webm" data-autoplay></video>
+** 
+:PROPERTIES:
+:CUSTOM_ID: peak_shift
+:END:
 Calculate the doppler veloicty from the resultant model parameters.
 #+begin_src python :session demo :results output :eval no-export :tangle yes
 peak_shift = ne_viii_fit.mean_1.quantity.to(u.km/u.s, equivalencies=u.doppler_optical(ne_viii_wave))
