@@ -32,7 +32,7 @@ Talk Objectives:
 - Understand how contributing to upstream has helped everyone, **and made it easier to use**
 #+END_NOTES
 
-* Me
+* Me                                                                  :noexport:
 :PROPERTIES:
 :CUSTOM_ID: me
 :END:
@@ -64,7 +64,15 @@ Find me online:
 
 #+REVEAL_HTML: </div></div>
 
-* Astropy Modeling
+* Python, SunPy, Astropy etc
+:PROPERTIES:
+:CUSTOM_ID: ecosystem
+:END:
+
+[[file:./images/sunpy_ecosystem.svg]]
+
+
+** Astropy Modeling
 :PROPERTIES:
 :CUSTOM_ID: astropy_intro
 :END:
@@ -99,7 +107,7 @@ fig = plt.figure(figsize=(10, 3))
 #+RESULTS:
 : None
 
-#+NAME: double_gaussian_setup
+#+NAME: double_gaussian_imports
 #+begin_src python :exports none :results none
 import numpy as np
 import astropy.units as u
@@ -107,7 +115,9 @@ import astropy.modeling.models as m
 
 NIV_wave = 76.51 * u.nm
 NeVIII_wave = 77.04 * u.nm
-
+#+end_src
+#+NAME: double_gaussian_setup
+#+begin_src python :exports none :results none
 wave = np.linspace(start=76, stop=77.5, num=1000) * u.nm
 
 initial_model = (
@@ -117,6 +127,7 @@ initial_model = (
 #+end_src
 
 #+begin_src python :results graphics file output :file ./images/generated/initial_model.svg :session initial-model :noweb yes
+<<double_gaussian_imports>>
 <<double_gaussian_setup>>
 
 plt.plot(wave, initial_model(wave))
@@ -441,7 +452,10 @@ Parameters:
 :END:
 Calculate the doppler veloicty from the resultant model parameters.
 #+begin_src python :session demo :results output :eval no-export :tangle yes
-peak_shift = ne_viii_fit.mean_1.quantity.to(u.km/u.s, equivalencies=u.doppler_optical(ne_viii_wave))
+peak_shift = ne_viii_fit.mean_1.quantity.to(
+    u.km/u.s,
+    equivalencies=u.doppler_optical(ne_viii_wave)
+)
 #+end_src
 
 ** 
