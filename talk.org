@@ -190,8 +190,8 @@ plt.plot(wave, initial_model(wave))
 
   #+BEGIN_NOTES
 - Talk through the fit code.
-- Fitting a double gaussian is a lot faster in serial.
-- Following slides talk about how, so just talk about why.
+- Fitting a double gaussian is now ~3x faster.
+- To achieve this we looked at profiles of the fitting code and found that a lot of redundant input validation and things which could be cached.
 #+END_NOTES
 
 # Setup the Fitter
@@ -257,6 +257,9 @@ fit_g(initial_model, wave, y)
 :PROPERTIES:
 :CUSTOM_ID: serial-fixes
 :END:
+#+BEGIN_NOTES
+- We made three separate code changes which sped up the evaluation of the models.
+#+END_NOTES
 
 #+REVEAL_HTML: <div class='two-columns'><div>
 
@@ -275,6 +278,11 @@ fit_g(initial_model, wave, y)
 :PROPERTIES:
 :CUSTOM_ID: derivs
 :END:
+#+BEGIN_NOTES
+- The biggest change made to speed up fitting of Compound Models was analytical Derivatives
+- Models like Gaussian1D in Astropy have a method for calculating the Derivatives of the parameters for the fitter.
+- We added the ability to ~CompoundModel~ to use various differentiation rules speeding up the fitting significantly.
+#+END_NOTES
 
 #+attr_html: :width 60%
 [[file:./images/serial_prs/17034.png]]
@@ -283,6 +291,12 @@ fit_g(initial_model, wave, y)
 :PROPERTIES:
 :CUSTOM_ID: parallel-fitter
 :END:
+
+#+BEGIN_NOTES
+- The parallel fitting helper distributes the spectra to be fit over however many processors you have available.
+- It has sensible defaults for doing this on a single machine automatically, but can scale up to HPC or cloud systems.
+- 3 more PRs, don't really need to talk about them too much.
+#+END_NOTES
 
 #+REVEAL_HTML: <div class='two-columns'><div>
 #+attr_html: :width 60%
@@ -313,8 +327,9 @@ It can scale from your laptop to a HPC cluster or cloud providers.
 :CUSTOM_ID: demo
 :END:
 #+BEGIN_NOTES
+- Now going to walk through an example.
 - In this example we are fitting ~95,000 spectra
-#+END_NOTES
+  #+END_NOTES
 
 #+begin_src python :session demo :results output :eval no-export :exports none :tangle yes :noweb yes
 <<mpl>>
@@ -330,6 +345,8 @@ import numpy as np
 import dask.distributed
 client = dask.distributed.Client('127.0.0.1:9999')
 print(client)
+
+spice_file = "./demo/solo_L2_spice-n-ras_20220402T031537_V22_100663994-000.fits"
 #+end_src
 
 #+RESULTS:
@@ -339,7 +356,7 @@ print(client)
 #+begin_src python :session demo :results output :eval no-export :tangle yes
 from sunraster.instr.spice import read_spice_l2_fits
 
-spice = read_spice_l2_fits("./demo/solo_L2_spice-n-ras_20220402T031537_V22_100663994-000.fits")["Ne VIII 770 - Peak"]
+spice = read_spice_l2_fits(spice_file)["Ne VIII 770 - Peak"]
 spice = spice[0, :, 120:-120, :]
 print(spice)
 #+end_src
@@ -359,7 +376,7 @@ print(spice)
 spice.meta = dict(spice.meta)
 #+END_SRC
 
-#+begin_src python :session demo :results output :eval no-export :tangle yes
+#+begin_src python :session demo :results output :eval no-export :tangle yes :exports none
 wl_sum = spice.rebin((-1, 1, 1), operation=np.sum).squeeze()
 print(wl_sum)
 #+end_src
@@ -410,10 +427,21 @@ Parameters:
 :PROPERTIES:
 :CUSTOM_ID: final_fit
 :END:
+
+#+BEGIN_NOTES
+We pass ~parallel_fit_dask~ the following things:
+
+- spice which is an NDCube, ~parallel_fit_dask~ uses the data, coordinates (wcs), mask and uncertainty from this.
+- The model to fit
+- A fitter (there's a number to choose from in Astropy)
+- The axes of the data along which to fit (in this case the first)
+- Some extra kwargs
+#+END_NOTES
+
 #+begin_src python :session demo :results output :eval no-export :tangle yes
 ne_viii_fit = parallel_fit_dask(
                   data=spice,
-                  model=ne_viii_model,, operation=np.sum
+                  model=ne_viii_model,
                   fitter=TRFLSQFitter(),
                   fitting_axes=0,
                   fitter_kwargs={"filter_non_finite": True}, # Filter out non-finite values,
@@ -444,12 +472,21 @@ Parameters:
 :PROPERTIES:
 :CUSTOM_ID: distributed_dashboard
 :END:
+#+BEGIN_NOTES
+This is a real-time recording of me fitting this on my 16 core workstation machine.
 
+Each purple bar is a fitting task of 250 spectra. These are distributed over all the available workers.
+#+END_NOTES
 #+REVEAL_HTML: <video data-src="./images/distributed.webm" data-autoplay></video>
 ** 
 :PROPERTIES:
 :CUSTOM_ID: peak_shift
 :END:
+
+#+BEGIN_NOTES
+This line takes the mean of the Gaussian1D component of the model (~mean_0~ is the mean of the constant model).
+And using the ~doppler_optical~ equivalency and the reference wavelength we can convert to velocity. 
+#+END_NOTES
 Calculate the doppler veloicty from the resultant model parameters.
 #+begin_src python :session demo :results output :eval no-export :tangle yes
 peak_shift = ne_viii_fit.mean_1.quantity.to(
@@ -509,5 +546,5 @@ Thanks to various members of the Astropy and SunPy communities for their feedbac
 **Links**
 
 - Slides - [[https://cadair.github.io/hinode-iris-2025-astropy-modeling]]
-- SPICE Fitting Tutorial - ???
+- SPICE Fitting Tutorial - In the SunPy gallery soon!
 - Astropy Documentation - [[https://docs.astropy.org/en/stable/modeling/parallel-fitting.html]]
